@@ -23,7 +23,7 @@ color_cycle = itertools.cycle(color_steps)
 @bot.event
 async def on_ready():
     print(f"Bot conectado como {bot.user}")
-    await bot.tree.sync(guild=discord.Object(id=GUILD_ID))  # Sincronizar slash commands
+    await bot.tree.sync(guild=discord.Object(id=1170123435691749517))  # Sincronizar slash commands
     animate_role.start()
 
 # ------------------- Slash Commands -------------------

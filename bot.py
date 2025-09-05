@@ -7,7 +7,7 @@ import os
 from flask import Flask
 from threading import Thread
 
-# ⚠️ Token desde variable de entorno en Replit
+# ⚠️ Token desde variable de entorno
 TOKEN = os.environ.get("DISCORD_TOKEN")
 
 # ---------------- Configuración ----------------
@@ -15,10 +15,10 @@ GUILD_ID = 1170123435691749517   # Tu servidor
 ROLE_ID = 1413273099268522036    # Rol a animar
 
 intents = discord.Intents.default()
-bot = commands.Bot(command_prefix="/", intents=intents)  # Prefix no importa, solo para compatibilidad
+bot = commands.Bot(command_prefix="/", intents=intents)
 
-# Lista de colores para el gradiente
-color_steps = [0xFFFFFF, 0xFFCCCC, 0xFF6666, 0x990000]  # blanco -> rojo oscuro
+# ---------------- Gradiente ----------------
+color_steps = [0xFFFFFF, 0xFFCCCC, 0xFF6666, 0x990000]  # blanco → rojo oscuro
 color_cycle = itertools.cycle(color_steps)
 
 # ---------------- Eventos ----------------
@@ -26,23 +26,23 @@ color_cycle = itertools.cycle(color_steps)
 async def on_ready():
     print(f"Bot conectado como {bot.user}")
     try:
-        synced = await bot.tree.sync(guild=discord.Object(id=1170123435691749517))  # ID real del servidor
+        synced = await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
         print(f"Comandos sincronizados: {len(synced)}")
     except Exception as e:
         print(f"Error sincronizando comandos: {e}")
     animate_role.start()
 
-# ---------------- Slash Commands ----------------
+# ---------------- Slash Command ----------------
 @bot.tree.command(
     name="ping",
     description="Comprueba si el bot está activo",
-    guild=discord.Object(id=1170123435691749517)
+    guild=discord.Object(id=GUILD_ID)
 )
 async def ping(interaction: discord.Interaction):
     await interaction.response.send_message(f"¡Estoy vivo, {interaction.user.mention}! 😎")
 
-# ---------------- Animación de rol ----------------
-@tasks.loop(seconds=120)  # Cambia color cada 2 minutos
+# ---------------- Animación del rol ----------------
+@tasks.loop(seconds=120)  # Intervalo seguro (2 minutos)
 async def animate_role():
     guild = bot.get_guild(GUILD_ID)
     if not guild:

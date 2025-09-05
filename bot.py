@@ -1,33 +1,42 @@
 import discord
-from discord.ext import tasks, commands
+from discord import app_commands
+from discord.ext import commands, tasks
 import itertools
 import asyncio
 import os
+from flask import Flask
+from threading import Thread
 
-# ⚠️ Token desde variable de entorno permanente
+# ⚠️ Token desde variable de entorno en Replit
 TOKEN = os.environ.get("DISCORD_TOKEN")
-GUILD_ID = 1170123435691749517
-ROLE_ID = 1413273099268522036
+GUILD_ID = 1170123435691749517   # Tu servidor
+ROLE_ID = 1413273099268522036    # Rol a animar
 
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Gradiente seguro: 4 pasos
-color_steps = [
-    0xFFFFFF,  # blanco
-    0xFFCCCC,  # rojo muy claro
-    0xFF6666,  # rojo medio
-    0x990000   # rojo oscuro
-]
-
+# Lista de colores para el gradiente
+color_steps = [0xFFFFFF, 0xFFCCCC, 0xFF6666, 0x990000]  # blanco -> rojo oscuro
 color_cycle = itertools.cycle(color_steps)
 
+# ------------------- Eventos -------------------
 @bot.event
 async def on_ready():
     print(f"Bot conectado como {bot.user}")
+    await bot.tree.sync(guild=discord.Object(id=GUILD_ID))  # Sincronizar slash commands
     animate_role.start()
 
-@tasks.loop(seconds=120)  # ⏱ Intervalo largo para que CMD y Discord no pierdan pasos
+# ------------------- Slash Commands -------------------
+@bot.tree.command(
+    name="ping",
+    description="Comprueba si el bot está activo",
+    guild=discord.Object(id=GUILD_ID)
+)
+async def ping(interaction: discord.Interaction):
+    await interaction.response.send_message(f"¡Estoy vivo, {interaction.user.mention}! 😎")
+
+# ------------------- Animación de rol -------------------
+@tasks.loop(seconds=120)  # Cambia color cada 2 minutos
 async def animate_role():
     guild = bot.get_guild(GUILD_ID)
     if not guild:
@@ -37,25 +46,18 @@ async def animate_role():
     if not role:
         print("No se encontró el rol")
         return
-
     new_color = next(color_cycle)
-    await change_role(role, new_color)
-
-async def change_role(role, color_value):
     try:
-        await role.edit(color=discord.Color(color_value))
-        await asyncio.sleep(3)  # espera que CMD registre
-        print(f"Rol '{role.name}' color aplicado: #{color_value:06X}")
+        await role.edit(color=discord.Color(new_color))
+        print(f"Rol '{role.name}' color aplicado: #{new_color:06X}")
     except discord.Forbidden:
-        print("El bot no tiene permisos para cambiar el color del rol")
+        print("No tengo permisos para cambiar el color del rol")
     except discord.HTTPException as e:
         print(f"Error HTTP: {e}")
     except Exception as e:
         print(f"Error inesperado: {e}")
 
-from flask import Flask
-from threading import Thread
-
+# ------------------- Keep Alive para Replit -------------------
 app = Flask('')
 
 @app.route('/')
@@ -69,6 +71,5 @@ def keep_alive():
     t = Thread(target=run)
     t.start()
 
-# Llama a keep_alive() ANTES de bot.run()
 keep_alive()
 bot.run(TOKEN)

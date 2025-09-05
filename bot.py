@@ -53,4 +53,22 @@ async def change_role(role, color_value):
     except Exception as e:
         print(f"Error inesperado: {e}")
 
+from flask import Flask
+from threading import Thread
+
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Bot is running!"
+
+def run():
+    app.run(host="0.0.0.0", port=8080)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
+
+# Llama a keep_alive() ANTES de bot.run()
+keep_alive()
 bot.run(TOKEN)
